@@ -1,0 +1,15 @@
+{
+    "name": "Impostor Game",
+    "short_name": "Impostor",
+    "start_url": "./",
+    "display": "standalone",
+    "background_color": "#1a1a1a",
+    "theme_color": "#00ff9d",
+    "icons": [
+        {
+            "src": "icon.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        }
+    ]
+}
