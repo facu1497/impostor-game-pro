@@ -12,6 +12,16 @@ export const DrawingBoard: React.FC = () => {
     const alivePlayers = state.players.filter(p => p.isAlive);
     const currentDrawer = alivePlayers[state.drawingIndex];
 
+    const [isSpyGuessing, setIsSpyGuessing] = useState(false);
+    const [spyWordGuess, setSpyWordGuess] = useState('');
+
+    const handleSpyGuess = () => {
+        if (!spyWordGuess.trim()) return;
+        dispatch({ type: 'SPY_GUESS', payload: spyWordGuess });
+    };
+
+    const hasSpy = state.selectedRoles.includes('spy');
+
     useEffect(() => {
         if (isConfirmed && timeLeft > 0) {
             const timer = setInterval(() => {
@@ -109,31 +119,75 @@ export const DrawingBoard: React.FC = () => {
                         </div>
                     </div>
 
-                    <canvas
-                        ref={canvasRef}
-                        width={300}
-                        height={400}
-                        style={{
-                            background: '#000',
-                            border: '2px solid rgba(255,255,255,0.1)',
-                            borderRadius: '12px',
-                            cursor: 'crosshair',
-                            touchAction: 'none',
-                            width: '100%',
-                            maxWidth: '350px'
-                        }}
-                        onMouseDown={startDrawing}
-                        onMouseMove={draw}
-                        onMouseUp={stopDrawing}
-                        onMouseOut={stopDrawing}
-                        onTouchStart={startDrawing}
-                        onTouchMove={draw}
-                        onTouchEnd={stopDrawing}
-                    />
+                    {!isSpyGuessing ? (
+                        <>
+                            <canvas
+                                ref={canvasRef}
+                                width={300}
+                                height={400}
+                                style={{
+                                    background: '#000',
+                                    border: '2px solid rgba(255,255,255,0.1)',
+                                    borderRadius: '12px',
+                                    cursor: 'crosshair',
+                                    touchAction: 'none',
+                                    width: '100%',
+                                    maxWidth: '350px'
+                                }}
+                                onMouseDown={startDrawing}
+                                onMouseMove={draw}
+                                onMouseUp={stopDrawing}
+                                onMouseOut={stopDrawing}
+                                onTouchStart={startDrawing}
+                                onTouchMove={draw}
+                                onTouchEnd={stopDrawing}
+                            />
 
-                    <div style={{ marginTop: '1.5rem' }}>
-                        <Button onClick={handleDone}>¡LISTO!</Button>
-                    </div>
+                            <div style={{ marginTop: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+                                <Button onClick={handleDone}>¡LISTO!</Button>
+
+                                {hasSpy && (
+                                    <Button
+                                        onClick={() => setIsSpyGuessing(true)}
+                                        style={{
+                                            background: 'linear-gradient(45deg, #ffaa00, #ff5500)',
+                                            color: '#000',
+                                            fontWeight: 'bold',
+                                            border: 'none',
+                                            boxShadow: '0 0 15px rgba(255, 170, 0, 0.5)'
+                                        }}
+                                    >
+                                        🎭 ¡SOY EL ESPÍA!
+                                    </Button>
+                                )}
+                            </div>
+                        </>
+                    ) : (
+                        <div style={{ padding: '2rem 1rem', background: 'rgba(0,0,0,0.3)', borderRadius: '12px', marginTop: '2rem' }}>
+                            <h3 style={{ color: '#ffaa00', marginBottom: '1rem' }}>REVELAR IDENTIDAD</h3>
+                            <input
+                                type="text"
+                                placeholder="Escribe la palabra secreta..."
+                                value={spyWordGuess}
+                                onChange={(e) => setSpyWordGuess(e.target.value)}
+                                autoFocus
+                                style={{
+                                    width: '100%',
+                                    padding: '0.8rem',
+                                    borderRadius: '8px',
+                                    border: '1px solid #ffaa00',
+                                    background: 'rgba(0,0,0,0.5)',
+                                    color: '#fff',
+                                    marginBottom: '1rem',
+                                    textAlign: 'center'
+                                }}
+                            />
+                            <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                <Button onClick={handleSpyGuess} style={{ background: '#ffaa00', color: '#000' }}>ADIVINAR</Button>
+                                <Button variant="secondary" onClick={() => setIsSpyGuessing(false)}>CANCELAR</Button>
+                            </div>
+                        </div>
+                    )}
 
                     <div style={{ marginTop: '1rem', opacity: 0.5, fontSize: '0.8rem' }}>
                         Turno: {state.drawingIndex + 1} / {alivePlayers.length}

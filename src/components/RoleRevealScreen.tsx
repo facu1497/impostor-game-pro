@@ -24,14 +24,14 @@ export const RoleRevealScreen: React.FC = () => {
 
         // Progress animation logic
         progressIntervalRef.current = setInterval(() => {
-            setScanProgress(prev => Math.min(prev + 5, 100));
+            setScanProgress(prev => Math.min(prev + 10, 100)); // 10% every 100ms = 1s
         }, 100);
 
         scanTimeoutRef.current = setTimeout(() => {
             setIsRevealed(true);
             setIsScanning(false);
             if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);
-        }, 2000); // 2 seconds to reveal
+        }, 1000); // 1 second to reveal
     };
 
     const cancelScan = () => {
@@ -75,9 +75,13 @@ export const RoleRevealScreen: React.FC = () => {
                             onTouchEnd={cancelScan}
                         >
                             <div className="scanning-laser"></div>
-                            <span className="fingerprint-icon">
-                                ☝️
-                            </span>
+                            <img
+                                src={`${import.meta.env.BASE_URL}fingerprint.png`}
+                                alt="Fingerprint"
+                                className="fingerprint-image"
+                                draggable="false"
+                                onContextMenu={(e) => e.preventDefault()}
+                            />
                         </div>
                         <p className="scan-label">
                             {isScanning ? `Escaneando... ${scanProgress}%` : 'MANTÉN PARA ESCANEAR'}

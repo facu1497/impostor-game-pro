@@ -9,30 +9,48 @@ import { ResultsScreen } from './components/ResultsScreen';
 import { LastBreathScreen } from './components/LastBreathScreen';
 
 const GameController = () => {
-    const { state } = useGame();
+    const { state, dispatch } = useGame();
 
-    // Simple routing based on phase
-    switch (state.phase) {
-        case 'WELCOME':
-            return <WelcomeScreen />;
-        case 'SETUP':
-            return <SetupScreen />;
-        case 'ROLE_REVEAL':
-            return <RoleRevealScreen />;
-        case 'ROUND_IN_PROGRESS':
-            return <GameScreen />;
-        case 'VOTING':
-        case 'DIGITAL_VOTING':
-            return <VotingScreen />;
-        case 'LAST_BREATH':
-            return <LastBreathScreen />;
-        case 'ROUND_RESULTS':
-            return <RoundResultsScreen />;
-        case 'RESULTS':
-            return <ResultsScreen />;
-        default:
-            return <div>Error: Unknown Phase</div>;
-    }
+    const showCancel = state.phase !== 'WELCOME' && state.phase !== 'SETUP' && state.phase !== 'RESULTS';
+
+    const renderScreen = () => {
+        switch (state.phase) {
+            case 'WELCOME':
+                return <WelcomeScreen />;
+            case 'SETUP':
+                return <SetupScreen />;
+            case 'ROLE_REVEAL':
+                return <RoleRevealScreen />;
+            case 'ROUND_IN_PROGRESS':
+                return <GameScreen />;
+            case 'VOTING':
+            case 'DIGITAL_VOTING':
+                return <VotingScreen />;
+            case 'LAST_BREATH':
+                return <LastBreathScreen />;
+            case 'ROUND_RESULTS':
+                return <RoundResultsScreen />;
+            case 'RESULTS':
+                return <ResultsScreen />;
+            default:
+                return <div>Error: Unknown Phase</div>;
+        }
+    };
+
+    return (
+        <div style={{ position: 'relative' }}>
+            {showCancel && (
+                <button
+                    className="cancel-button"
+                    onClick={() => dispatch({ type: 'CANCEL_GAME' })}
+                    title="Cancelar Partida"
+                >
+                    &times;
+                </button>
+            )}
+            {renderScreen()}
+        </div>
+    );
 };
 
 function App() {

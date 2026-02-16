@@ -170,15 +170,22 @@ select:focus {
   border-color: #fff;
 }
 
-.fingerprint-icon {
-  font-size: 4rem;
-  color: var(--neon-blue);
-  opacity: 0.5;
-  transition: opacity 0.3s ease;
+.fingerprint-image {
+  width: 80px;
+  height: 80px;
+  filter: brightness(0) invert(1) drop-shadow(0 0 10px var(--neon-blue));
+  opacity: 0.6;
+  transition: all 0.3s ease;
+  pointer-events: none;
+  /* Block touch interactions */
+  user-select: none;
+  -webkit-user-drag: none;
 }
 
-.fingerprint-area.scanning .fingerprint-icon {
+.fingerprint-area.scanning .fingerprint-image {
   opacity: 1;
+  filter: brightness(0) invert(1) drop-shadow(0 0 20px var(--neon-blue));
+  transform: scale(1.1);
 }
 
 .scanning-laser {
@@ -195,13 +202,21 @@ select:focus {
 
 .fingerprint-area.scanning .scanning-laser {
   display: block;
-  animation: scan 2s linear infinite;
+  animation: scan 1s linear infinite;
 }
 
 @keyframes scan {
-  0% { top: 0; }
-  50% { top: 100%; }
-  100% { top: 0; }
+  0% {
+    top: 0;
+  }
+
+  50% {
+    top: 100%;
+  }
+
+  100% {
+    top: 0;
+  }
 }
 
 .scan-label {
@@ -211,17 +226,56 @@ select:focus {
   text-transform: uppercase;
 }
 
-.fingerprint-area.scanning + .scan-label {
+.fingerprint-area.scanning+.scan-label {
   color: var(--neon-blue);
   text-shadow: 0 0 5px var(--neon-blue);
 }
 
 @keyframes pulse {
-  0% { transform: scale(1); opacity: 0.8; }
-  50% { transform: scale(1.05); opacity: 1; }
-  100% { transform: scale(1); opacity: 0.8; }
+  0% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+
+  50% {
+    transform: scale(1.05);
+    opacity: 1;
+  }
+
+  100% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
 }
 
 .fingerprint-area:not(.scanning) {
   animation: pulse 2s infinite ease-in-out;
+}
+
+/* Cancel Button */
+.cancel-button {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-secondary);
+  font-size: 24px;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  backdrop-filter: blur(5px);
+  transition: all 0.3s ease;
+}
+
+.cancel-button:hover {
+  background: rgba(255, 0, 85, 0.2);
+  border-color: var(--neon-red);
+  color: var(--neon-red);
+  box-shadow: 0 0 10px var(--neon-red);
 }

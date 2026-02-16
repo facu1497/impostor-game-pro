@@ -85,6 +85,33 @@ export const ResultsScreen: React.FC = () => {
                             }}
                         />
                     </>
+                ) : jesterWon ? (
+                    <>
+                        <img
+                            src={`${import.meta.env.BASE_URL}caja-bufon.png`}
+                            alt="Caja Bufón"
+                            style={{
+                                position: 'absolute',
+                                left: '0px',
+                                bottom: '0px',
+                                width: '120px',
+                                zIndex: 3,
+                                filter: 'drop-shadow(0 0 10px rgba(94, 94, 99, 0.12))'
+                            }}
+                        />
+                        <img
+                            src={`${import.meta.env.BASE_URL}bufon.png`}
+                            alt="Bufón"
+                            style={{
+                                position: 'absolute',
+                                right: '0px',
+                                bottom: '10px',
+                                height: '180px',
+                                zIndex: 3,
+                                filter: 'drop-shadow(0 0 10px rgba(94, 94, 99, 0.12))'
+                            }}
+                        />
+                    </>
                 ) : (
                     <>
                         <img

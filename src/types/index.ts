@@ -75,6 +75,8 @@ export type GameAction =
   | { type: 'SUBMIT_DIGITAL_VOTE'; payload: { voterId: string, targetId: string } }
   | { type: 'GUESS_WORD'; payload: string }
   | { type: 'SUBMIT_DRAWING' }
+  | { type: 'CANCEL_GAME' }
+  | { type: 'SPY_GUESS'; payload: string }
   | { type: 'NEW_ROUND' }
   | { type: 'CALCULATE_RESULTS' }
   | { type: 'RESET_GAME' };

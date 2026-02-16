@@ -7,6 +7,8 @@ export const GameScreen: React.FC = () => {
     const { state, dispatch } = useGame();
     const [timeLeft, setTimeLeft] = useState(state.roundDuration);
     const [isActive, setIsActive] = useState(true);
+    const [isSpyGuessing, setIsSpyGuessing] = useState(false);
+    const [spyWordGuess, setSpyWordGuess] = useState('');
 
     useEffect(() => {
         if (state.gameMode === 'silent') return;
@@ -31,6 +33,13 @@ export const GameScreen: React.FC = () => {
         return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
     };
 
+    const handleSpyGuess = () => {
+        if (!spyWordGuess.trim()) return;
+        dispatch({ type: 'SPY_GUESS', payload: spyWordGuess });
+    };
+
+    const hasSpy = state.selectedRoles.includes('spy');
+
     return (
         <div className="glass-panel" style={{ textAlign: 'center' }}>
             <h2>RONDA EN PROGRESO</h2>
@@ -45,28 +54,77 @@ export const GameScreen: React.FC = () => {
                 {formatTime(timeLeft)}
             </div>
 
-            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', marginBottom: '2rem' }}>
-                <Button
-                    variant="secondary"
-                    onClick={() => setIsActive(!isActive)}
-                    style={{ width: 'auto' }}
-                >
-                    {isActive ? 'PAUSAR' : 'REANUDAR'}
-                </Button>
+            <div style={{ display: 'flex', gap: '1rem', flexDirection: 'column', alignItems: 'center', marginBottom: '2rem' }}>
+                <div style={{ display: 'flex', gap: '1rem' }}>
+                    <Button
+                        variant="secondary"
+                        onClick={() => setIsActive(!isActive)}
+                        style={{ width: 'auto' }}
+                    >
+                        {isActive ? 'PAUSAR' : 'REANUDAR'}
+                    </Button>
+                </div>
+
+                {hasSpy && !isSpyGuessing && (
+                    <Button
+                        onClick={() => setIsSpyGuessing(true)}
+                        style={{
+                            background: 'linear-gradient(45deg, #ffaa00, #ff5500)',
+                            color: '#000',
+                            fontWeight: 'bold',
+                            marginTop: '1rem',
+                            border: 'none',
+                            boxShadow: '0 0 15px rgba(255, 170, 0, 0.5)'
+                        }}
+                    >
+                        🎭 ¡SOY EL ESPÍA!
+                    </Button>
+                )}
+
+                {isSpyGuessing && (
+                    <div style={{ marginTop: '1rem', width: '100%', maxWidth: '300px' }}>
+                        <input
+                            type="text"
+                            placeholder="Adivina la palabra..."
+                            value={spyWordGuess}
+                            onChange={(e) => setSpyWordGuess(e.target.value)}
+                            onKeyDown={(e) => e.key === 'Enter' && handleSpyGuess()}
+                            autoFocus
+                            style={{
+                                width: '100%',
+                                padding: '0.8rem',
+                                borderRadius: '8px',
+                                border: '1px solid #ffaa00',
+                                background: 'rgba(0,0,0,0.5)',
+                                color: '#fff',
+                                marginBottom: '0.5rem',
+                                textAlign: 'center'
+                            }}
+                        />
+                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                            <Button onClick={handleSpyGuess} style={{ background: '#ffaa00', color: '#000' }}>ADIVINAR</Button>
+                            <Button variant="secondary" onClick={() => setIsSpyGuessing(false)}>CANCELAR</Button>
+                        </div>
+                    </div>
+                )}
             </div>
 
-            <div style={{ textAlign: 'left', background: 'rgba(0,0,0,0.3)', padding: '1rem', borderRadius: '8px', marginBottom: '2rem' }}>
-                <p><strong>Instrucciones:</strong></p>
-                <ul style={{ paddingLeft: '1.2rem', color: 'var(--text-secondary)' }}>
-                    <li>Hagan una ronda de preguntas/afirmaciones.</li>
-                    <li>Cada jugador dice una palabra relacionada sin ser demasiado obvio.</li>
-                    <li>El Impostor debe intentar pasar desapercibido.</li>
-                </ul>
-            </div>
+            {!isSpyGuessing && (
+                <>
+                    <div style={{ textAlign: 'left', background: 'rgba(0,0,0,0.3)', padding: '1rem', borderRadius: '8px', marginBottom: '2rem' }}>
+                        <p><strong>Instrucciones:</strong></p>
+                        <ul style={{ paddingLeft: '1.2rem', color: 'var(--text-secondary)' }}>
+                            <li>Hagan una ronda de preguntas/afirmaciones.</li>
+                            <li>Cada jugador dice una palabra relacionada sin ser demasiado obvio.</li>
+                            <li>El Impostor debe intentar pasar desapercibido.</li>
+                        </ul>
+                    </div>
 
-            <Button variant="danger" onClick={() => dispatch({ type: 'END_ROUND' })}>
-                FINALIZAR Y VOTAR
-            </Button>
+                    <Button variant="danger" onClick={() => dispatch({ type: 'END_ROUND' })}>
+                        FINALIZAR Y VOTAR
+                    </Button>
+                </>
+            )}
         </div>
     );
 };

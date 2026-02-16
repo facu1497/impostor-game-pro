@@ -162,7 +162,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
 
             // Count active players
             const activePlayers = updatedPlayers.filter(p => p.isAlive);
-            const activeImpostors = activePlayers.filter(p => p.role === 'impostor');
+            const activeImpostors = activePlayers.filter(p => p.role === 'impostor' || p.role === 'spy');
             const activeCitizens = activePlayers.filter(p => p.role === 'citizen');
 
             const votedPlayer = updatedPlayers.find(p => p.id === action.payload);
@@ -235,7 +235,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
                 );
 
                 const remainingPlayers = finalPlayers.filter(p => p.isAlive);
-                const remainingImpostors = remainingPlayers.filter(p => p.role === 'impostor');
+                const remainingImpostors = remainingPlayers.filter(p => p.role === 'impostor' || p.role === 'spy');
                 const remainingCitizens = remainingPlayers.filter(p => p.role === 'citizen');
 
                 let nextPhase: GamePhase = 'ROUND_RESULTS';
@@ -284,6 +284,20 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
                     votingIndex: 0
                 };
             }
+
+        case 'CANCEL_GAME':
+            return {
+                ...state,
+                phase: 'SETUP'
+            };
+
+        case 'SPY_GUESS':
+            const isSpyCorrect = action.payload.trim().toLowerCase() === state.secretWord.toLowerCase();
+            return {
+                ...state,
+                phase: 'RESULTS',
+                winnerRole: isSpyCorrect ? 'impostor' : 'citizen'
+            };
 
         case 'NEW_ROUND':
             return { ...state, phase: 'ROUND_IN_PROGRESS' };

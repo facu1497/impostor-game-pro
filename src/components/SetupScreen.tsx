@@ -25,10 +25,18 @@ export const SetupScreen: React.FC = () => {
     };
 
     const toggleRole = (role: Role) => {
+        const isSpecialRole = role === 'spy' || role === 'jester';
+
         if (selectedRoles.includes(role)) {
             setSelectedRoles(selectedRoles.filter(r => r !== role));
         } else {
-            setSelectedRoles([...selectedRoles, role]);
+            // Apply constraint: If only 4 players, only one special role allowed
+            if (isSpecialRole && state.players.length === 4) {
+                const otherSpecial = role === 'spy' ? 'jester' : 'spy';
+                setSelectedRoles([...selectedRoles.filter(r => r !== otherSpecial), role]);
+            } else {
+                setSelectedRoles([...selectedRoles, role]);
+            }
         }
     };
 
