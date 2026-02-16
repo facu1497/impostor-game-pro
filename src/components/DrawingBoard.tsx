@@ -18,9 +18,11 @@ export const DrawingBoard: React.FC = () => {
     const handleSpyGuess = () => {
         if (!spyWordGuess.trim()) return;
         dispatch({ type: 'SPY_GUESS', payload: spyWordGuess });
+        setIsSpyGuessing(false);
+        setSpyWordGuess('');
     };
 
-    const hasSpy = state.selectedRoles.includes('spy');
+    const hasSpy = state.players.some(p => p.role === 'spy' && p.isAlive);
 
     useEffect(() => {
         if (isConfirmed && timeLeft > 0) {
@@ -170,6 +172,7 @@ export const DrawingBoard: React.FC = () => {
                                 placeholder="Escribe la palabra secreta..."
                                 value={spyWordGuess}
                                 onChange={(e) => setSpyWordGuess(e.target.value)}
+                                onKeyDown={(e) => e.key === 'Enter' && handleSpyGuess()}
                                 autoFocus
                                 style={{
                                     width: '100%',
@@ -183,8 +186,8 @@ export const DrawingBoard: React.FC = () => {
                                 }}
                             />
                             <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                <Button onClick={handleSpyGuess} style={{ background: '#ffaa00', color: '#000' }}>ADIVINAR</Button>
-                                <Button variant="secondary" onClick={() => setIsSpyGuessing(false)}>CANCELAR</Button>
+                                <Button onClick={handleSpyGuess} style={{ background: '#ffaa00', color: '#000', flex: 1 }}>ADIVINAR</Button>
+                                <Button variant="secondary" onClick={() => setIsSpyGuessing(false)} style={{ flex: 1 }}>CANCELAR</Button>
                             </div>
                         </div>
                     )}

@@ -36,9 +36,11 @@ export const GameScreen: React.FC = () => {
     const handleSpyGuess = () => {
         if (!spyWordGuess.trim()) return;
         dispatch({ type: 'SPY_GUESS', payload: spyWordGuess });
+        setIsSpyGuessing(false);
+        setSpyWordGuess('');
     };
 
-    const hasSpy = state.selectedRoles.includes('spy');
+    const hasSpy = state.players.some(p => p.role === 'spy' && p.isAlive);
 
     return (
         <div className="glass-panel" style={{ textAlign: 'center' }}>
@@ -102,8 +104,8 @@ export const GameScreen: React.FC = () => {
                             }}
                         />
                         <div style={{ display: 'flex', gap: '0.5rem' }}>
-                            <Button onClick={handleSpyGuess} style={{ background: '#ffaa00', color: '#000' }}>ADIVINAR</Button>
-                            <Button variant="secondary" onClick={() => setIsSpyGuessing(false)}>CANCELAR</Button>
+                            <Button onClick={handleSpyGuess} style={{ background: '#ffaa00', color: '#000', flex: 1 }}>ADIVINAR</Button>
+                            <Button variant="secondary" onClick={() => setIsSpyGuessing(false)} style={{ flex: 1 }}>CANCELAR</Button>
                         </div>
                     </div>
                 )}

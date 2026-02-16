@@ -293,11 +293,46 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
 
         case 'SPY_GUESS':
             const isSpyCorrect = action.payload.trim().toLowerCase() === state.secretWord.toLowerCase();
-            return {
-                ...state,
-                phase: 'RESULTS',
-                winnerRole: isSpyCorrect ? 'impostor' : 'citizen'
-            };
+
+            if (isSpyCorrect) {
+                return {
+                    ...state,
+                    phase: 'RESULTS',
+                    winnerRole: 'spy'
+                };
+            } else {
+                // Eliminate the spy (assuming first spy found if multiple, but usually one)
+                const updatedPlayers = state.players.map(p =>
+                    (p.role === 'spy' && p.isAlive) ? { ...p, isAlive: false } : p
+                );
+
+                const activePlayers = updatedPlayers.filter(p => p.isAlive);
+                const activeImpostors = activePlayers.filter(p => p.role === 'impostor' || p.role === 'spy');
+                const activeCitizens = activePlayers.filter(p => p.role === 'citizen');
+
+                if (activeImpostors.length === 0) {
+                    return {
+                        ...state,
+                        players: updatedPlayers,
+                        phase: 'RESULTS',
+                        winnerRole: 'citizen'
+                    };
+                } else if (activeImpostors.length >= activeCitizens.length) {
+                    return {
+                        ...state,
+                        players: updatedPlayers,
+                        phase: 'RESULTS',
+                        winnerRole: 'impostor'
+                    };
+                }
+
+                // If game continues, we might need to change phase back to progress if it was paused? 
+                // Mostly just update the players list.
+                return {
+                    ...state,
+                    players: updatedPlayers
+                };
+            }
 
         case 'NEW_ROUND':
             return { ...state, phase: 'ROUND_IN_PROGRESS' };

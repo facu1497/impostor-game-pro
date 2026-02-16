@@ -11,6 +11,7 @@ export const ResultsScreen: React.FC = () => {
 
     const jesterWon = state.winnerRole === 'jester' || state.lastVotedPlayer?.role === 'jester';
     const citizensWin = state.winnerRole === 'citizen';
+    const spyWon = state.winnerRole === 'spy';
 
     const allImpostors = state.players.filter(p => p.role === 'impostor');
     const allSpies = state.players.filter(p => p.role === 'spy');
@@ -28,6 +29,10 @@ export const ResultsScreen: React.FC = () => {
         titleColor = 'var(--neon-green)';
         titleText = '¡CIUDADANOS GANAN!';
         subtitleText = '¡Todos los impostores han sido eliminados!';
+    } else if (spyWon) {
+        titleColor = 'var(--neon-red)';
+        titleText = '¡IMPOSTORES GANAN!';
+        subtitleText = '¡GRACIAS AL ESPÍA POR ADIVINAR LA PALABRA!';
     }
 
     return (
@@ -102,6 +107,33 @@ export const ResultsScreen: React.FC = () => {
                         <img
                             src={`${import.meta.env.BASE_URL}bufon.png`}
                             alt="Bufón"
+                            style={{
+                                position: 'absolute',
+                                right: '0px',
+                                bottom: '10px',
+                                height: '180px',
+                                zIndex: 3,
+                                filter: 'drop-shadow(0 0 10px rgba(94, 94, 99, 0.12))'
+                            }}
+                        />
+                    </>
+                ) : spyWon ? (
+                    <>
+                        <img
+                            src={`${import.meta.env.BASE_URL}pizarra-espia.png`}
+                            alt="Pizarra Espía"
+                            style={{
+                                position: 'absolute',
+                                left: '0px',
+                                bottom: '0px',
+                                width: '120px',
+                                zIndex: 3,
+                                filter: 'drop-shadow(0 0 10px rgba(94, 94, 99, 0.12))'
+                            }}
+                        />
+                        <img
+                            src={`${import.meta.env.BASE_URL}espia.png`}
+                            alt="Espía"
                             style={{
                                 position: 'absolute',
                                 right: '0px',
