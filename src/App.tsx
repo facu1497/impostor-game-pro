@@ -6,6 +6,7 @@ import { GameScreen } from './components/GameScreen';
 import { VotingScreen } from './components/VotingScreen';
 import { RoundResultsScreen } from './components/RoundResultsScreen';
 import { ResultsScreen } from './components/ResultsScreen';
+import { LastBreathScreen } from './components/LastBreathScreen';
 
 const GameController = () => {
     const { state } = useGame();
@@ -21,7 +22,10 @@ const GameController = () => {
         case 'ROUND_IN_PROGRESS':
             return <GameScreen />;
         case 'VOTING':
+        case 'DIGITAL_VOTING':
             return <VotingScreen />;
+        case 'LAST_BREATH':
+            return <LastBreathScreen />;
         case 'ROUND_RESULTS':
             return <RoundResultsScreen />;
         case 'RESULTS':

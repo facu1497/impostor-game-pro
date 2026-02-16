@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useGame } from '../context/GameContext';
 import { Button } from './ui/Button';
+import { DrawingBoard } from './DrawingBoard';
 
 export const GameScreen: React.FC = () => {
     const { state, dispatch } = useGame();
@@ -8,6 +9,7 @@ export const GameScreen: React.FC = () => {
     const [isActive, setIsActive] = useState(true);
 
     useEffect(() => {
+        if (state.gameMode === 'silent') return;
         let interval: any = null;
         if (isActive && timeLeft > 0) {
             interval = setInterval(() => {
@@ -17,7 +19,11 @@ export const GameScreen: React.FC = () => {
             setIsActive(false);
         }
         return () => clearInterval(interval);
-    }, [isActive, timeLeft]);
+    }, [isActive, timeLeft, state.gameMode]);
+
+    if (state.gameMode === 'silent') {
+        return <DrawingBoard />;
+    }
 
     const formatTime = (seconds: number) => {
         const mins = Math.floor(seconds / 60);

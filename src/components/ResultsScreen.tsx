@@ -9,32 +9,43 @@ export const ResultsScreen: React.FC = () => {
     // If we are here, it means GameContext decided the game is over.
     // We re-derive who won for display purposes.
 
-    const activeImpostors = state.players.filter(p => p.isAlive && p.role === 'impostor');
-    // If no impostors left -> Citizens Won
-    // If impostors >= citizens -> Impostors Won (technically context handles this transition)
-
-    const citizensWin = activeImpostors.length === 0;
+    const jesterWon = state.winnerRole === 'jester' || state.lastVotedPlayer?.role === 'jester';
+    const citizensWin = state.winnerRole === 'citizen';
 
     const allImpostors = state.players.filter(p => p.role === 'impostor');
+    const allSpies = state.players.filter(p => p.role === 'spy');
+    const allJesters = state.players.filter(p => p.role === 'jester');
+
+    let titleColor = 'var(--neon-red)';
+    let titleText = '¡IMPOSTORES GANAN!';
+    let subtitleText = '¡Los impostores han tomado el control!';
+
+    if (jesterWon) {
+        titleColor = 'var(--neon-purple)';
+        titleText = '¡EL BUFÓN GANA!';
+        subtitleText = `¡${state.lastVotedPlayer?.name} ha engañado a todos para ser votado!`;
+    } else if (citizensWin) {
+        titleColor = 'var(--neon-green)';
+        titleText = '¡CIUDADANOS GANAN!';
+        subtitleText = '¡Todos los impostores han sido eliminados!';
+    }
 
     return (
         <div className="glass-panel" style={{ textAlign: 'center', position: 'relative' }}>
             <h1 style={{
-                color: citizensWin ? 'var(--neon-green)' : 'var(--neon-red)',
-                textShadow: citizensWin ? '0 0 20px var(--neon-green)' : '0 0 20px var(--neon-red)',
+                color: titleColor,
+                textShadow: `0 0 20px ${titleColor}`,
                 fontSize: '3rem',
                 marginBottom: '1rem',
                 position: 'relative',
                 zIndex: 2
             }}>
-                {citizensWin ? '¡CIUDADANOS GANAN!' : '¡IMPOSTORES GANAN!'}
+                {titleText}
             </h1>
 
             <div style={{ marginBottom: '2rem', position: 'relative', zIndex: 2 }}>
                 <p style={{ fontSize: '1.2rem', color: 'var(--text-secondary)' }}>
-                    {citizensWin
-                        ? "¡Todos los impostores han sido eliminados!"
-                        : "¡Los impostores han tomado el control!"}
+                    {subtitleText}
                 </p>
             </div>
 
@@ -104,17 +115,38 @@ export const ResultsScreen: React.FC = () => {
                 )}
 
                 <h3 style={{ color: 'var(--neon-blue)' }}>REVELACIONES</h3>
-                <p style={{ marginBottom: '0.5rem' }}>Palabra Secreta:</p>
-                <p style={{ fontSize: '1.5rem', marginTop: '0' }}><strong>{state.secretWord}</strong></p>
-                <div style={{ marginTop: '1rem' }}>
-                    <p>Impostores:</p>
-                    <ul style={{ listStyle: 'none', padding: 0 }}>
-                        {allImpostors.map(imp => (
-                            <li key={imp.id} style={{ color: 'var(--neon-red)', fontWeight: 'bold' }}>
-                                {imp.name}
-                            </li>
-                        ))}
-                    </ul>
+                <p style={{ marginBottom: '0.1rem', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Palabra Secreta:</p>
+                <p style={{ fontSize: '1.5rem', marginTop: '0', color: '#fff', textShadow: '0 0 10px rgba(255,255,255,0.5)' }}><strong>{state.secretWord}</strong></p>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(100px, 1fr))', gap: '1rem', marginTop: '1rem' }}>
+                    <div>
+                        <p style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>Impostores:</p>
+                        <ul style={{ listStyle: 'none', padding: 0, fontSize: '0.9rem' }}>
+                            {allImpostors.map(imp => (
+                                <li key={imp.id} style={{ color: 'var(--neon-red)', fontWeight: 'bold' }}>{imp.name}</li>
+                            ))}
+                        </ul>
+                    </div>
+                    {allSpies.length > 0 && (
+                        <div>
+                            <p style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>Espías:</p>
+                            <ul style={{ listStyle: 'none', padding: 0, fontSize: '0.9rem' }}>
+                                {allSpies.map(spy => (
+                                    <li key={spy.id} style={{ color: '#ffaa00', fontWeight: 'bold' }}>{spy.name}</li>
+                                ))}
+                            </ul>
+                        </div>
+                    )}
+                    {allJesters.length > 0 && (
+                        <div>
+                            <p style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>Bufones:</p>
+                            <ul style={{ listStyle: 'none', padding: 0, fontSize: '0.9rem' }}>
+                                {allJesters.map(jest => (
+                                    <li key={jest.id} style={{ color: 'var(--neon-purple)', fontWeight: 'bold' }}>{jest.name}</li>
+                                ))}
+                            </ul>
+                        </div>
+                    )}
                 </div>
             </div>
 

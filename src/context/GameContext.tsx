@@ -1,5 +1,5 @@
 import React, { createContext, useReducer, type ReactNode, useContext } from 'react';
-import type { GameState, GameAction, Player, GamePhase } from '../types';
+import type { GameState, GameAction, Player, GamePhase, Role } from '../types';
 import { getRandomWord, baseCategories, CATEGORIES } from '../data/words';
 
 const initialState: GameState = {
@@ -10,6 +10,12 @@ const initialState: GameState = {
     secretWord: '',
     roundDuration: 300,
     revealIndex: 0,
+    votingIndex: 0,
+    drawingIndex: 0,
+    useDigitalVoting: false,
+    useLastBreath: false,
+    gameMode: 'standard',
+    selectedRoles: ['impostor', 'citizen'],
 };
 
 const gameReducer = (state: GameState, action: GameAction): GameState => {
@@ -38,7 +44,15 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
 
         case 'START_GAME':
             // 1. Assign Roles
-            const { categoryId, customWord, impostorKnowsCategory } = action.payload;
+            const {
+                categoryId,
+                customWord,
+                impostorKnowsCategory,
+                useDigitalVoting,
+                useLastBreath,
+                gameMode,
+                selectedRoles
+            } = action.payload;
             const totalPlayers = state.players.length;
             const impostorCount = state.impostorCount;
 
@@ -72,14 +86,29 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
             }
 
             // Create array of roles
-            const roles: ('impostor' | 'citizen')[] = Array(totalPlayers).fill('citizen');
-            let assignedImpostors = 0;
-            while (assignedImpostors < impostorCount) {
-                const idx = Math.floor(Math.random() * totalPlayers);
-                if (roles[idx] === 'citizen') {
-                    roles[idx] = 'impostor';
-                    assignedImpostors++;
+            const roles: Role[] = Array(totalPlayers).fill('citizen');
+            const availableIndices = Array.from({ length: totalPlayers }, (_, i) => i);
+
+            const getRandomIndex = () => {
+                const idx = Math.floor(Math.random() * availableIndices.length);
+                return availableIndices.splice(idx, 1)[0];
+            };
+
+            // Assign Impostors
+            for (let i = 0; i < impostorCount; i++) {
+                if (availableIndices.length > 0) {
+                    roles[getRandomIndex()] = 'impostor';
                 }
+            }
+
+            // Assign Spy (if selected and enough players)
+            if (selectedRoles.includes('spy') && availableIndices.length > 0) {
+                roles[getRandomIndex()] = 'spy';
+            }
+
+            // Assign Jester (if selected and enough players)
+            if (selectedRoles.includes('jester') && availableIndices.length > 0) {
+                roles[getRandomIndex()] = 'jester';
             }
 
             // Assign to players
@@ -103,7 +132,11 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
                 impostorKnowsCategory: !!impostorKnowsCategory,
                 realCategoryName,
                 currentCategory: CATEGORIES.find(c => c.id === categoryId) || null,
-                selectedCategoryId: categoryId
+                selectedCategoryId: categoryId,
+                useDigitalVoting,
+                useLastBreath,
+                gameMode,
+                selectedRoles
             };
 
         case 'NEXT_REVEAL':
@@ -116,7 +149,11 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
             return { ...state, phase: 'ROUND_IN_PROGRESS' };
 
         case 'END_ROUND':
-            return { ...state, phase: 'VOTING' };
+            return {
+                ...state,
+                phase: state.useDigitalVoting ? 'DIGITAL_VOTING' : 'VOTING',
+                votingIndex: 0 // Initialize for digital voting pass-the-device logic
+            };
 
         case 'VOTE_PLAYER':
             const updatedPlayers = state.players.map(p =>
@@ -139,12 +176,24 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
             console.log('Active Citizens:', activeCitizens.length);
 
             // Win Conditions
-            if (activeImpostors.length === 0) {
+            let winnerRole: Role | undefined = undefined;
+
+            if (votedPlayer?.role === 'jester') {
+                console.log('WIN: Jester (Voted out!)');
+                nextPhase = 'RESULTS';
+                winnerRole = 'jester';
+            } else if (activeImpostors.length === 0) {
                 console.log('WIN: Citizens (0 impostors left)');
-                nextPhase = 'RESULTS'; // Citizens Win
+                if (state.useLastBreath) {
+                    nextPhase = 'LAST_BREATH';
+                } else {
+                    nextPhase = 'RESULTS'; // Citizens Win
+                    winnerRole = 'citizen';
+                }
             } else if (activeImpostors.length >= activeCitizens.length) {
                 console.log('WIN: Impostors (Impostors >= Citizens)');
                 nextPhase = 'RESULTS'; // Impostors Win
+                winnerRole = 'impostor';
             } else {
                 console.log('CONTINUE: Round Results');
             }
@@ -153,8 +202,88 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
                 ...state,
                 players: updatedPlayers,
                 phase: nextPhase,
-                lastVotedPlayer: votedPlayer // Store for result screen
+                lastVotedPlayer: votedPlayer, // Store for result screen
+                winnerRole
             };
+
+        case 'SUBMIT_DIGITAL_VOTE':
+            const { targetId } = action.payload;
+            const aliveP = state.players.filter(p => p.isAlive);
+
+            const playersAV = state.players.map(p =>
+                p.id === targetId ? { ...p, votesReceived: p.votesReceived + 1 } : p
+            );
+
+            if (state.votingIndex < aliveP.length - 1) {
+                // Next player's turn to vote
+                return {
+                    ...state,
+                    players: playersAV,
+                    votingIndex: state.votingIndex + 1
+                };
+            } else {
+                // All votes are in! Find the most voted player
+                const tallies = playersAV.filter(p => p.isAlive);
+                const maxVotes = Math.max(...tallies.map(p => p.votesReceived));
+                const mostVoted = tallies.find(p => p.votesReceived === maxVotes);
+
+                if (!mostVoted) return state;
+
+                // Now execute the same logic as VOTE_PLAYER for 'mostVoted.id'
+                const finalPlayers = state.players.map(p =>
+                    p.id === mostVoted.id ? { ...p, isAlive: false, votesReceived: p.votesReceived + 1 } : p
+                );
+
+                const remainingPlayers = finalPlayers.filter(p => p.isAlive);
+                const remainingImpostors = remainingPlayers.filter(p => p.role === 'impostor');
+                const remainingCitizens = remainingPlayers.filter(p => p.role === 'citizen');
+
+                let nextPhase: GamePhase = 'ROUND_RESULTS';
+                let winnerRole: Role | undefined = undefined;
+
+                if (mostVoted.role === 'jester') {
+                    nextPhase = 'RESULTS';
+                    winnerRole = 'jester';
+                } else if (remainingImpostors.length === 0) {
+                    if (state.useLastBreath) {
+                        nextPhase = 'LAST_BREATH';
+                    } else {
+                        nextPhase = 'RESULTS';
+                        winnerRole = 'citizen';
+                    }
+                } else if (remainingImpostors.length >= remainingCitizens.length) {
+                    nextPhase = 'RESULTS';
+                    winnerRole = 'impostor';
+                }
+
+                return {
+                    ...state,
+                    players: finalPlayers,
+                    phase: nextPhase,
+                    lastVotedPlayer: mostVoted,
+                    winnerRole
+                };
+            }
+
+        case 'GUESS_WORD':
+            const isCorrect = action.payload.trim().toLowerCase() === state.secretWord.toLowerCase();
+            return {
+                ...state,
+                phase: 'RESULTS',
+                winnerRole: isCorrect ? 'impostor' : 'citizen'
+            };
+
+        case 'SUBMIT_DRAWING':
+            const playersAlive = state.players.filter(p => p.isAlive);
+            if (state.drawingIndex < playersAlive.length - 1) {
+                return { ...state, drawingIndex: state.drawingIndex + 1 };
+            } else {
+                return {
+                    ...state,
+                    phase: state.useDigitalVoting ? 'DIGITAL_VOTING' : 'VOTING',
+                    votingIndex: 0
+                };
+            }
 
         case 'NEW_ROUND':
             return { ...state, phase: 'ROUND_IN_PROGRESS' };
